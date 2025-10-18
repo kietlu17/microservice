@@ -1,7 +1,3 @@
-EProject-Phase-1 — E-commerce Microservices (Node.js)
-
-Một bản mẫu microservice để xây dựng backend cho một ứng dụng e-commerce. README này dựa trên project "nodejs-ecommerce-microservice" và đã được điều chỉnh cho kho hiện tại.
-
 ## Kiến trúc tổng quan
 
 Hệ thống sử dụng một API Gateway để gom các service (auth, product, order) và làm proxy cho các domain tương ứng. Các service giao tiếp nội bộ qua RabbitMQ (AMQP) để giảm tải cho các REST call tới MongoDB.
@@ -118,19 +114,7 @@ Sau đó test API qua `http://localhost:3003`.
 - Một số test mẫu nằm trong `product/src/test/product.test.js` và `auth/src/test/authController.test.js`.
 - Chạy test từng service: vào thư mục service, chạy `npm test`.
 
-## Những điểm cải thiện / Future work
 
-- Triển khai bằng Kubernetes để quản lý orchestration và scaling.
-- Viết test theo TDD (viết unit tests trước khi code feature).
-- Hoàn thiện nguyên tắc Dependency Injection theo Clean Architecture.
-- Viết các script Bash/PowerShell tự động hoá luồng test (curl sequence) để mô phỏng user flows.
-- Hỗ trợ nhiều giải pháp lưu trữ (SQL, Firebase) để tránh single point of failure.
 
-## Ghi chú
 
-- Ảnh chụp màn hình API tests nằm trong thư mục `api_test/`.
-- Nếu cần, tôi có thể thêm file `env.example` từng service từ ví dụ trên.
 
----
-
-Nếu bạn muốn tôi tạo luôn các file `env.example` cho từng service hoặc dịch README sang tiếng Anh, báo mình biết nhé.
