@@ -33,7 +33,7 @@ class App {
         const connection = await amqp.connect(amqpServer);
         console.log("Connected to RabbitMQ");
         const channel = await connection.createChannel();
-        await channel.assertQueue(config.rabbitMQQueue);
+        await channel.assertQueue(config.rabbitMQQueueOrder);
   
         channel.consume(config.rabbitMQQueueOrder, async (data) => {
           // Consume messages from the order queue on buy

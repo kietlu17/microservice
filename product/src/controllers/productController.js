@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const messageBroker = require("../utils/messageBroker");
 const uuid = require('uuid');
 const config = require("../config");
+// const
 /**
  * Class to hold the API implementation for the product services
  */
@@ -102,6 +103,22 @@ class ProductController {
         return res.status(401).json({ message: "Unauthorized" });
       }
       const products = await Product.find({});
+
+      res.status(200).json(products);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+
+    async getProductsID(req, res, next) {
+    try {
+      const token = req.headers.authorization;
+      if (!token) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const id = req.params.id
+      const products = await Product.findById(id);
 
       res.status(200).json(products);
     } catch (error) {

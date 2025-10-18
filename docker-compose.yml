@@ -1,0 +1,53 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - 15672:15672
+    networks:
+      - backend
+  
+  api_gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    ports:
+      - 3003:3003
+    networks:
+      - backend
+    
+  product:
+    build: ./product
+    container_name: product_service
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - backend
+
+  order:
+    build: ./order
+    container_name: order_service
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - backend
+  
+  auth: 
+    build: ./auth
+    container_name: auth_service
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+  mongodb:
+    image: bitnami/mongodb:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    networks:
+      - backend
+  
+
+networks:
+  backend:
