@@ -45,10 +45,16 @@ jobs:
           printf "RABBITMQ_QUEUE_PRODUCTS='products'\n" >> product/.env
           printf "PORT_PROUDUCT=3001\n" >> product/.env
           printf "PORT_PRODUCT=3001\n" >> product/.env
+          printf "LOGIN_TEST_USER='testuser'\n" >> product/.env
+          printf "LOGIN_TEST_PASSWORD='password'\n" >> product/.env
 
-      - name: Build and start services with docker compose
+      - name: Build images
         run: |
-          docker compose up -d --build
+          docker compose build --parallel
+
+      - name: Start infra services (mongodb, rabbitmq)
+        run: |
+          docker compose up -d mongodb rabbitmq
 
       - name: Wait for MongoDB
         run: |
@@ -60,23 +66,21 @@ jobs:
           echo "Waiting for RabbitMQ management on port 15672..."
           for i in $(seq 1 30); do nc -z localhost 15672 && break || sleep 2; done
 
-      - name: Install dependencies for services under test
+      - name: Run tests inside auth container (one-off)
         run: |
           set -e
-          cd auth && npm ci && cd ..
-          cd product && npm ci && cd ..
+          docker compose run --rm auth npm test
 
-      - name: Run tests for auth
+      - name: Start auth service (detached) for product tests
         run: |
-          set -e
-          cd auth
-          npm test
+          docker compose up -d auth
+          # give auth a moment to initialize
+          sleep 5
 
-      - name: Run tests for product
+      - name: Run tests inside product container (one-off)
         run: |
           set -e
-          cd product
-          npm test
+          docker compose run --rm product npm test
 
       - name: Tear down compose
         if: always()

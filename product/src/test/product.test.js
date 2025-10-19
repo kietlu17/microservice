@@ -14,14 +14,26 @@ describe("Products", () => {
     app = new App();
     await Promise.all([app.connectDB(), app.setupMessageBroker()])
 
+    const authBase = process.env.AUTH_SERVICE || "http://auth:3000";
+
+    // Ensure test user exists on auth service (ignore if already created)
+    try {
+      await chai
+        .request(authBase)
+        .post('/register')
+        .send({ username: process.env.LOGIN_TEST_USER || 'testuser', password: process.env.LOGIN_TEST_PASSWORD || 'password' });
+    } catch (e) {
+      // ignore registration failures (e.g. username already taken)
+    }
+
     // Authenticate with the auth microservice to get a token
     const authRes = await chai
-      .request("http://localhost:3000")
-      .post("/login")
-      .send({ username: process.env.LOGIN_TEST_USER, password: process.env.LOGIN_TEST_PASSWORD });
+      .request(authBase)
+      .post('/login')
+      .send({ username: process.env.LOGIN_TEST_USER || 'testuser', password: process.env.LOGIN_TEST_PASSWORD || 'password' });
 
     authToken = authRes.body.token;
-    console.log(authToken);
+    console.log('AUTH TOKEN:', authToken);
     app.start();
   });
 
