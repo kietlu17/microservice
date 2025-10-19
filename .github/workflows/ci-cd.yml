@@ -50,7 +50,7 @@ jobs:
 
       - name: Build and start services with docker-compose
         run: |
-          docker-compose up -d
+          docker-compose up -d --build
 
       - name: Wait for MongoDB
         run: |
@@ -83,5 +83,9 @@ jobs:
           npm start &
           cd product
           npm test
+    
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
 
 
