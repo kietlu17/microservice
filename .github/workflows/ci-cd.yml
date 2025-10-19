@@ -1,4 +1,4 @@
-name: CI - Docker Compose
+name: CI - tests (docker compose)
 
 on:
   push:
@@ -7,72 +7,84 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  test:
+    name: Build services and run tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Install Docker Compose plugin
+      - name: Create .env files for services
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
+          set -e
+          mkdir -p api-gateway auth order product
 
-      - name: Create .env files
+          # api-gateway
+          printf "AUTH_SERVICE='http://auth_service:3000'\n" > api-gateway/.env
+          printf "ORDER_SERVICE='http://order_service:3002'\n" >> api-gateway/.env
+          printf "PRODUCT_SERVICE='http://product_service:3001'\n" >> api-gateway/.env
+          printf "PORT_API=3003\n" >> api-gateway/.env
+
+          # auth
+          printf "MONGODB_AUTH_URI=\"mongodb://mongodb/auth\"\n" > auth/.env
+          printf "JWT_SECRET=\"secret\"\n" >> auth/.env
+
+          # order
+          printf "MONGODB_ORDER_URI='mongodb://mongodb/orders'\n" > order/.env
+          printf "RABBITMQ_URI='amqp://rabbitmq?frameMax=0x2000'\n" >> order/.env
+          printf "RABBITMQ_QUEUE_ORDERS='orders'\n" >> order/.env
+          printf "RABBITMQ_QUEUE_PRODUCTS='products'\n" >> order/.env
+          printf "PORT_ORDER=3002\n" >> order/.env
+
+          # product (kept your original PORT_PROUDUCT and also add PORT_PRODUCT)
+          printf "JWT_SECRET=\"secret\"\n" > product/.env
+          printf "MONGODB_PRODUCT_URI=\"mongodb://mongodb/products\"\n" >> product/.env
+          printf "MONGODB_ORDER_URI='mongodb://mongodb/orders'\n" >> product/.env
+          printf "RABBITMQ_URI='amqp://rabbitmq?frameMax=0x2000'\n" >> product/.env
+          printf "RABBITMQ_QUEUE_ORDERS='orders'\n" >> product/.env
+          printf "RABBITMQ_QUEUE_PRODUCTS='products'\n" >> product/.env
+          printf "PORT_PROUDUCT=3001\n" >> product/.env
+          printf "PORT_PRODUCT=3001\n" >> product/.env
+
+      - name: Build and start services with docker compose
         run: |
-          echo "AUTH_SERVICE=http://auth_service:3000" >> api-gateway/.env
-          echo "ORDER_SERVICE=http://order_service:3002" >> api-gateway/.env
-          echo "PRODUCT_SERVICE=http://product_service:3001" >> api-gateway/.env
-          echo "PORT_API=3003" >> api-gateway/.env
-
-          echo "MONGODB_AUTH_URI=${{ secrets.MONGODB_AUTH_URI }}" >> auth/.env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> auth/.env
-          echo "PORT_AUTH=3000" >> auth/.env
-
-          echo "MONGODB_ORDER_URI=${{ secrets.MONGODB_ORDER_URI }}" >> order/.env
-          echo "RABBITMQ_URI=${{ secrets.RABBITMQ_URI }}" >> order/.env
-          echo "RABBITMQ_QUEUE_ORDERS=orders" >> order/.env
-          echo "RABBITMQ_QUEUE_PRODUCTS=products" >> order/.env
-          echo "PORT_ORDER=3002" >> order/.env
-
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> product/.env
-          echo "MONGODB_PRODUCT_URI=${{ secrets.MONGODB_PRODUCT_URI }}" >> product/.env
-          echo "MONGODB_ORDER_URI=${{ secrets.MONGODB_ORDER_URI }}" >> product/.env
-          echo "RABBITMQ_URI=${{ secrets.RABBITMQ_URI }}" >> product/.env
-          echo "RABBITMQ_QUEUE_ORDERS=orders" >> product/.env
-          echo "RABBITMQ_QUEUE_PRODUCTS=products" >> product/.env
-          echo "PORT_PRODUCT=3001" >> product/.env
-          echo "LOGIN_TEST_USER=${{ secrets.LOGIN_TEST_USER }}" >> product/.env
-          echo "LOGIN_TEST_PASSWORD=${{ secrets.LOGIN_TEST_PASSWORD }}" >> product/.env
-
-      - name: Build and start services with docker-compose
-        run: docker compose up -d --build
+          docker compose up -d --build
 
       - name: Wait for MongoDB
         run: |
-          echo "Waiting for MongoDB..."
-          for i in {1..30}; do nc -z localhost 27017 && break || sleep 2; done
+          echo "Waiting for MongoDB on port 27017..."
+          for i in $(seq 1 30); do nc -z localhost 27017 && break || sleep 2; done
 
-      - name: Wait for RabbitMQ
+      - name: Wait for RabbitMQ management
         run: |
-          echo "Waiting for RabbitMQ..."
-          for i in {1..30}; do nc -z localhost 15672 && break || sleep 2; done
+          echo "Waiting for RabbitMQ management on port 15672..."
+          for i in $(seq 1 30); do nc -z localhost 15672 && break || sleep 2; done
+
+      - name: Install dependencies for services under test
+        run: |
+          set -e
+          cd auth && npm ci && cd ..
+          cd product && npm ci && cd ..
 
       - name: Run tests for auth
         run: |
+          set -e
           cd auth
-          npm ci
           npm test
 
       - name: Run tests for product
         run: |
+          set -e
           cd product
-          npm ci
           npm test
 
-      - name: Cleanup
+      - name: Tear down compose
         if: always()
-        run: docker compose down -v
+        run: |
+          docker compose down --volumes --remove-orphans
+
+      - name: Dump docker logs on failure
+        if: failure()
+        run: |
+          docker compose ps || true
+          docker compose logs --no-color || true
