@@ -9,17 +9,17 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    services: {}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
+      - name: Install Docker Compose plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
 
       - name: Create .env files
         run: |
@@ -49,43 +49,30 @@ jobs:
           echo "LOGIN_TEST_PASSWORD=${{ secrets.LOGIN_TEST_PASSWORD }}" >> product/.env
 
       - name: Build and start services with docker-compose
-        run: |
-          docker compose up -d --build
+        run: docker compose up -d --build
 
       - name: Wait for MongoDB
         run: |
-          echo "Waiting for MongoDB on port 27017..."
+          echo "Waiting for MongoDB..."
           for i in {1..30}; do nc -z localhost 27017 && break || sleep 2; done
 
       - name: Wait for RabbitMQ
         run: |
-          echo "Waiting for RabbitMQ management on port 15672..."
+          echo "Waiting for RabbitMQ..."
           for i in {1..30}; do nc -z localhost 15672 && break || sleep 2; done
 
-
-
-      - name: Install dependencies
+      - name: Run tests for auth
         run: |
           cd auth
           npm ci
-          cd ..
-          cd product
-          npm ci
-          cd ..
-          npm ci
-      - name: Run tests for auth
-        run : |
-          cd auth
           npm test
+
       - name: Run tests for product
         run: |
-          cd auth &&
-          npm start &
           cd product
+          npm ci
           npm test
-    
+
       - name: Cleanup
         if: always()
         run: docker compose down -v
-
-
