@@ -97,7 +97,7 @@ jobs:
         if: success()
         run: |
           set -e
-          docker tag api-gateway_service ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
+          docker tag api_gateway ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
           docker tag auth_service${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
           docker tag order_service ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
           docker tag product_service ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
