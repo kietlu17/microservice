@@ -96,19 +96,12 @@ jobs:
       - name: Push images to Docker Hub
         if: success()
         run: |
-          set -e
-          docker tag microservice-api_gateway ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
+          docker tag microservice-api_gateway:latest ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
           docker tag microservice-auth:latest ${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
-          docker tag microservice-order ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
-          docker tag microservice-product ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
+          docker tag microservice-order:latest ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
+          docker tag microservice-product:latest ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
 
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
-
-      - name: Dump docker logs on failure
-        if: failure()
-        run: |
-          docker compose ps || true
-          docker compose logs --no-color || true
