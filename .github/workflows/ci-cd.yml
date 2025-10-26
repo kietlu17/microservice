@@ -55,9 +55,9 @@ jobs:
         run: |
           docker compose build --parallel
 
-      - name: Start infra services (mongodb, rabbitmq)
+      - name: Run all service
         run: |
-          docker compose up -d mongodb rabbitmq
+          docker compose up -d 
 
       - name: Wait for MongoDB
         run: |
@@ -69,16 +69,10 @@ jobs:
           echo "Waiting for RabbitMQ management on port 15672..."
           for i in $(seq 1 30); do nc -z localhost 15672 && break || sleep 2; done
 
-      - name: Run tests inside auth container (one-off)
+      - name: Run tests inside auth container
         run: |
           set -e
           docker compose run --rm auth npm test
-
-      - name: Start auth service (detached) for product tests
-        run: |
-          docker compose up -d auth
-          # give auth a moment to initialize
-          sleep 5
 
       - name: Run tests inside product container (one-off)
         run: |
@@ -97,7 +91,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 9️⃣ Push từng image lên Docker Hub
+      # Push từng image lên Docker Hub
       - name: Push images to Docker Hub
         if: success()
         run: |
