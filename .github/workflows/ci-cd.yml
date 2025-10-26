@@ -97,10 +97,10 @@ jobs:
         if: success()
         run: |
           set -e
-          docker tag eproject-phase-1-api_gateway:latest ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
-          docker tag eproject-phase-1-auth:latest ${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
-          docker tag eproject-phase-1-order:latest ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
-          docker tag eproject-phase-1-product:latest ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
+          docker tag microservice-api_gateway ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
+          docker tag microservice-auth:latest ${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
+          docker tag microservice-order ${{ secrets.DOCKERHUB_USERNAME }}/order:latest
+          docker tag microservice-product ${{ secrets.DOCKERHUB_USERNAME }}/product:latest
 
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/api_gateway:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/auth:latest
