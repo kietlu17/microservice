@@ -74,6 +74,12 @@ jobs:
           set -e
           docker compose run --rm auth npm test
 
+      - name: Start auth service (detached) for product tests
+        run: |
+          docker compose up -d auth
+          # give auth a moment to initialize
+          sleep 5
+
       - name: Run tests inside product container (one-off)
         run: |
           set -e
