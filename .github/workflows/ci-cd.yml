@@ -77,6 +77,7 @@ jobs:
       - name: Run tests inside product container (one-off)
         run: |
           set -e
+          sleep 20
           docker compose exec product npm test
 
       - name: Tear down compose
