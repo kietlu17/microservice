@@ -15,7 +15,7 @@ function isAuthenticated(req, res, next) {
     // Verify the token using the JWT library and the secret key
     const decodedToken = jwt.verify(token, config.jwt_key);
     req.user = decodedToken;
-    console.log(req.user);
+    // console.log(req.user);
     next();
   } catch (err) {
     console.error(err);

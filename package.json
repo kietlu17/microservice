@@ -8,7 +8,7 @@
     
   },
   "keywords": [],
-  "author": "",
+  "author": "https://github.com/kietlu17/microservice",
   "license": "ISC",
   "dependencies": {
     "amqplib": "^0.10.3",

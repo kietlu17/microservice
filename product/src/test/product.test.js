@@ -10,9 +10,10 @@ chai.use(chaiHttp);
 describe("Products", () => {
   let app;
 
-  before(async () => {
+  before(async function () {
     app = new App();
-    await Promise.all([app.connectDB(), app.setupMessageBroker()])
+    await Promise.all([app.connectDB(), app.setupMessageBroker()]);
+    this.timeout(40000);
 
     const authBase = process.env.AUTH_SERVICE || "http://auth:3000";
 
@@ -34,17 +35,18 @@ describe("Products", () => {
 
     authToken = authRes.body.token;
     console.log('AUTH TOKEN:', authToken);
-    app.start();
+    // app.start();
   });
 
   after(async () => {
     await app.disconnectDB();
-    app.stop();
+    // app.stop();
   });
 
   describe("POST /products", () => {
     it("should create a new product", async () => {
       const product = {
+        _id: null,
         name: "Product 1",
         description: "Description of Product 1",
         price: 10,
@@ -58,7 +60,8 @@ describe("Products", () => {
             price: 10,
             description: "Description of Product 1"
           });
-
+      
+      createdProductId = res.body._id;
       expect(res).to.have.status(201);
       expect(res.body).to.have.property("_id");
       expect(res.body).to.have.property("name", product.name);
@@ -80,5 +83,33 @@ describe("Products", () => {
       expect(res).to.have.status(400);
     });
   });
+
+   describe("GET /products", () => {
+    it("should return a list of products", async () => {
+      const res = await chai
+        .request(app.app)
+        .get("/api/products")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(res).to.have.status(200);
+    });
+  });
+  
+    describe("POST /products/buy", () => {
+    const product_url = "http://api_gateway:3003/products";
+    it("Buy comleted", async () => {
+      const res = await chai
+        .request(product_url)
+        .post("/api/products/buy")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          ids : [createdProductId]
+        });
+
+      expect(res).to.have.status(201);
+      expect(res.body.status).to.equal("completed");
+    });
+  });
+  
 });
 

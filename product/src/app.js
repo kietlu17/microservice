@@ -14,6 +14,7 @@ class App {
     this.setupMessageBroker();
   }
 
+
   async connectDB() {
     await mongoose.connect(config.mongoURI, {
       useNewUrlParser: true,

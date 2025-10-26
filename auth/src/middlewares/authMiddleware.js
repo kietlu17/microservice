@@ -6,17 +6,24 @@ const config = require("../config");
  */
 
 module.exports = function(req, res, next) {
-  const token = req.header("x-auth-token");
-
-  if (!token) {
-    return res.status(401).json({ message: "No token, authorization denied" });
+ const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
+
+  // Extract the token from the header
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = decoded;
+    // Verify the token using the JWT library and the secret key
+    const decodedToken = jwt.verify(token, config.jwtSecret);
+    req.user = decodedToken;
+    console.log(req.user);
     next();
-  } catch (e) {
-    res.status(400).json({ message: "Token is not valid" });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
+
+
