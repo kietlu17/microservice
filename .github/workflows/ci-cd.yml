@@ -80,10 +80,10 @@ jobs:
           sleep 20
           docker compose exec product npm test
 
-      - name: Tear down compose
+      - name: docker images
         if: always()
         run: |
-          docker compose down --volumes --remove-orphans
+          docker images
 
       - name: Login to Docker Hub
         if: success()
