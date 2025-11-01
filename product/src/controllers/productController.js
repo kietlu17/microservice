@@ -111,10 +111,7 @@ class ProductController {
     }
   }
 
-  async getID (req, res, next){
-    const prod = await Product.findById(req.params.id)
-    res.status(200).json(prod)
-  }
+
 
 }
 
